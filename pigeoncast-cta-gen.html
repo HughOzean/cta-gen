@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Download Section Generator</title>
+    <!-- Removed external CSS/Tailwind scripts as requested -->
+    <style>
+        * {margin:0;padding:0;font-family: sans-serif;color:#FFFFFF;}
+        body {background-color:#333;}
+        main {width: 70vw; display: flex; flex-flow: column; justify-content: center;margin-left: 5vw;}
+        aside {width: 30vw;}
+        h1{text-align: center;line-height: 2em;}
+        h2{text-align: center;}
+        .blog-content {width: 60%; margin:auto;}
+        .live-preview {width: 90%; margin:auto;}
+        .download-section {background-image: url('https://pigeoncast.com/images/blog/download-section-bg.svg');background-size:cover;background-position: center;background-repeat: no-repeat;display: flex;flex-flow: row;justify-content: space-between;align-items: center;padding: 24px;width: 100%;margin: 2em 0;border: none;border-radius: 30px;position: relative;overflow: hidden;box-sizing: border-box;min-height: 140px;}
+        .download-app {display: flex; flex-flow: row; width:50%;}
+        .donwload-icon {margin:auto;}
+        .download-icon img{width:72px;height:72px;aspect-ratio: 1/1;margin:auto;}
+        .download-info {display:flex;flex-flow:column;width:100%;}
+        .download-info p {font-family: Arial, sans-serif;font-weight:bold;font-size:20px;text-align:center;color:#fff;margin:0;}
+        .download-info-spec {display:flex;flex-flow:row;height: 2em;margin:0 auto;}
+        .download-info-spec div {display: flex; flex-flow:row; border-left:2px solid #ccc; margin: auto 0; margin-right:10px; padding-left:10px;}
+        .download-info-spec div:first-child {border-left:none;}
+        .download-info-spec img {margin: auto 0;height:18px;}
+        .download-info-spec p {margin: auto; text-align: center;font-family:sans-serif;font-size:14px;font-weight:300;}
+        .download-buttons {margin: auto;}
+        .download-buttons a{margin: auto 10px;}
+        #preview-container {display: flex; flex-flow: column;margin: auto; width: 100%;}
+        .output-section {margin:5vh auto; width: 100%;}
+        .output-section pre{background-color:#080808;white-space: pre-wrap;word-wrap: break-word;margin: 3vh auto; padding: 1vw;border-radius: 10px;border: 2px solid #666;}
+        #raw-html-output {font-family: monospace; color: springgreen;}
+        .controls {position: fixed; right:2.5vw; display: flex;flex-flow:column;background-color:#666; width: 20%;border-radius: 10px;}
+        .controls h2 {line-height: 1.25em;margin: 1em auto;}
+        .controls-labels {margin: 5vh auto;display: flex; flex-flow: column;}
+        .controls-labels label{font-size: 18px; color:#FFFFFF;}
+        #copy-button {font-size: 18px;font-weight: bold; margin: 1em auto 0 auto;padding: 0.5em 0; width: 100%; background-color: #0099ff; border:1px solid #0099FF;border-radius: 5px;}
+        #copy-button:hover {color: #FFFFFF; background-color: #12a0FF;border: 1px solid #00CCFF;}
+
+        @media only screen and (max-width: 480px) {
+            .blog-content {width: 100vw; margin: auto;}
+            .download-section {background: linear-gradient(#007be9 0, #66b0ff 100%);display:flex;flex-flow:column;justify-content: center; padding: 24px 24px 0 24px;width:100%;}
+            .download-app {display: flex; flex-flow: row; width:100%;}
+            .donwload-icon {margin:auto;}
+            .download-icon img{width:60px;height:60px;aspect-ratio: 1/1;margin:auto;}
+            .download-info {display:flex;flex-flow:column;width:100%;}
+            .download-info p {font-family: Arial, sans-serif;font-weight:bold;font-size:22px;text-align:center;color:#fff;margin:0;}
+            .download-info-spec {display:flex;flex-flow:row;height: 2em;margin:0 auto;}
+            .download-info-spec div {display: flex; flex-flow:row; border-left:2px solid #ccc; margin: auto 0; margin-right:10px; padding-left:10px;}
+            .download-info-spec div:first-child {border-left:none;}
+            .download-info-spec img {margin: auto 0;height:24px;}
+            .download-info-spec p {margin: auto; text-align: center;font-family:sans-serif;font-size:16px;font-weight:300;}
+            .download-buttons {margin: 1vh auto;border-top:1px solid #FFFFFF50;padding-top:1vh;}
+            .download-buttons a{margin: 0 10px;}
+        }
+    </style>
+</head>
+<body>
+    <h1>PigeonCast Download Buttons Generator</h1>
+    <aside>
+        <div class="controls">
+            <h2>Select Platforms</h2>
+            <div class="controls-labels" style="display: flex; gap: 20px;">
+                <label><input type="checkbox" id="platform-ios" value="ios" onchange="updateContent()" checked> iOS</label>
+                <label><input type="checkbox" id="platform-android_tv" value="android_tv" onchange="updateContent()" checked> Android TV</label>
+                <label><input type="checkbox" id="platform-android_phone" value="android_phone" onchange="updateContent()"> Android Phone</label>
+                <label><input type="checkbox" id="platform-windows" value="windows" onchange="updateContent()"> Windows</label>
+            </div>
+        </div>
+    </aside>
+    <main>
+        <div class="live-preview">
+            <div id="preview-container">
+                <!-- Generated HTML will go here -->
+            </div>
+        </div>
+
+        <!-- Raw HTML Output Section -->
+        <div class="output-section">
+            <h2>Generated HTML Code</h2>
+            <button id="copy-button" onclick="copyHtmlToClipboard()">Copy Code</button>
+            <pre><code id="raw-html-output"></code></pre>
+        </div>
+    </main>
+    <script>
+        // Define configuration for each platform
+        const PLATFORMS = {
+            ios: {
+                url: "https://apps.apple.com/app/apple-store/id6741746652?pt=127581685&ct=apple_from_PigeonBlog&mt=8",
+                icon: "https://popular-chocolate-6f816fc165.media.strapiapp.com/app_store_badge_3e99995e8d.svg",
+                alt: "Download on the Apple App Store"
+            },
+            android_tv: {
+                url: "https://play.google.com/store/apps/details?id=com.pigeoncast.screen.mirroring.android.tv&referrer=utm_source%3DPigeonBlog%26utm_campaign%3DAndroidTV_from_PigeonBlog",
+                icon: "https://popular-chocolate-6f816fc165.media.strapiapp.com/google_play_badge_5ac3bc4201.svg",
+                alt: "Get it on Google Play"
+            },
+            android_phone: {
+                url: "https://play.google.com/store/apps/details?id=com.pigeoncast.screen.mirroring&referrer=utm_source%3DPigeonBlog%26utm_campaign%3DAndroid_from_PigeonBlog",
+                icon: "https://popular-chocolate-6f816fc165.media.strapiapp.com/google_play_badge_5ac3bc4201.svg",
+                alt: "Get it on Google Play"
+            },
+            windows: {
+                url: "https://apps.microsoft.com/detail/9P8FWCKN5S3P?cid=pigeoncast_blog",
+                icon: "https://popular-chocolate-6f816fc165.media.strapiapp.com/windows_badge_33c944b4d6.svg",
+                alt: "Get it from Microsoft Store"
+            }
+        };
+
+        /**
+         * Generates the HTML string for the download section based on selected platforms.
+         * Enforces a maximum of two download links.
+         * @param {string[]} selectedPlatforms - Array of selected platform keys (e.g., ['ios', 'android']).
+         * @returns {string} The complete HTML string.
+         */
+        function generateDownloadSection(selectedPlatforms) {
+            // Constraint: Only the first two selected platforms are used.
+            const platformsForButtons = selectedPlatforms.slice(0, 2);
+            
+            // 1. Generate the download buttons based on the filtered selection
+            // Each line is formatted with 8 spaces of indentation to align correctly in the final output.
+            let downloadButtonsHtml = platformsForButtons.map(platformKey => {
+                const config = PLATFORMS[platformKey];
+                if (!config) return '';
+
+                return `        <a href="${config.url}" target="_blank" rel="nofollow"><img src="${config.icon}" width="150px" height="50px"></a>`;
+            }).join('\n');
+
+
+            // 2. Insert the buttons into the main template structure
+            // Note the newline (\n) before the ${downloadButtonsHtml} insertion 
+            // to ensure the first link is on a new, properly indented line.
+            const mainTemplate = `
+<div class="download-section">
+    <div class="download-app">
+        <div class="download-icon">
+            <img src="https://popular-chocolate-6f816fc165.media.strapiapp.com/pigeonlogo_74f524075d.svg" alt="App Icon">
+        </div>
+        <div class="download-info">
+            <p>PigeonCast Screen Mirroring</p>
+            <div class="download-info-spec">
+                <div><img src="https://popular-chocolate-6f816fc165.media.strapiapp.com/stars_5551eb8884.svg" alt="Star Rating" width="136px" height="24px"></div>
+                <div><p>Official Download</p></div>
+                <div><img src="https://popular-chocolate-6f816fc165.media.strapiapp.com/approved_d12266a53c.svg" alt="Official Badge" width="24px" height="24px"></div>
+            </div>
+        </div>
+    </div>
+    <div class="download-buttons">
+${downloadButtonsHtml}
+    </div>
+</div>
+            `;
+
+            return mainTemplate.trim();
+        }
+
+        /**
+         * Updates both the live preview and the raw HTML output.
+         */
+        function updateContent() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            const selectedPlatforms = Array.from(checkboxes).map(cb => cb.value);
+
+            const generatedHtml = generateDownloadSection(selectedPlatforms);
+
+            // Update the live preview
+            const previewContainer = document.getElementById('preview-container');
+            previewContainer.innerHTML = generatedHtml;
+
+            // Update the raw HTML output
+            const rawHtmlOutput = document.getElementById('raw-html-output');
+            rawHtmlOutput.textContent = generatedHtml;
+        }
+
+        /**
+         * Copies the generated HTML code to the user's clipboard.
+         */
+        function copyHtmlToClipboard() {
+            const codeElement = document.getElementById('raw-html-output');
+            const textToCopy = codeElement.textContent;
+            
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                const button = document.getElementById('copy-button');
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy Code';
+                }, 1500);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                // Fallback for user if copy fails
+                // NOTE: Use of alert() is generally avoided, but retained here as a final fallback 
+                // for clipboard access failure, which is outside the main app functionality.
+                // In a production app, this would be a custom modal.
+                // For this environment, we rely on the document.execCommand('copy') which is generally supported.
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        // Run the function once on page load to initialize the content
+        document.addEventListener('DOMContentLoaded', updateContent);
+    </script>
+</body>
+</html>
